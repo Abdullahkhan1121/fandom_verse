@@ -1,15 +1,21 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+
 import 'firebase_options.dart';
+import 'screens/auth/auth_gate.dart';
+import 'screens/profile/profile_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const FandomVerseApp());
 }
 
 class FandomVerseApp extends StatelessWidget {
   const FandomVerseApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -20,7 +26,7 @@ class FandomVerseApp extends StatelessWidget {
         colorSchemeSeed: Colors.deepPurple,
         brightness: Brightness.dark,
       ),
-      home: const FandomHomePage(),
+      home: const AuthGate(),
     );
   }
 }
@@ -112,11 +118,7 @@ class _FandomHomePageState extends State<FandomHomePage> {
           description: 'Save merchandise and items you love.',
         );
       case 4:
-        return const SimplePage(
-          icon: Icons.person,
-          title: 'Your Profile',
-          description: 'Manage your Fandom Verse profile.',
-        );
+        return const ProfileScreen();
       default:
         return const HomePage();
     }
