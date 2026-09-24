@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1049254927432",
+    "project_id": "fandom-verse-techwiz-2026",
+    "storage_bucket": "fandom-verse-techwiz-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1049254927432:android:21fe4a464d7ed24013cc7d",
+        "android_client_info": {
+          "package_name": "com.example.fandom_verse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAF2UOCyWWUCoytaGfNtAqO35Aj6M_E1KY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
