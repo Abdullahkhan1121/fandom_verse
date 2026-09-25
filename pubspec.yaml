@@ -37,6 +37,15 @@ dependencies:
   firebase_core: ^4.15.0
   firebase_auth: ^6.7.0
   cloud_firestore: ^6.10.0
+  image_picker: ^1.2.3
+  firebase_storage: ^13.6.0
+  image: ^4.5.4
+
+  # firebase_core: any
+  # # firebase_auth: any
+  # # cloud_firestore: any
+  # # firebase_storage: any
+  # # image_picker: any
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +68,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/fandom-logo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
