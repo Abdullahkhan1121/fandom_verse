@@ -347,6 +347,7 @@ import 'package:fandom_verse/screens/admin/addfandom.dart';
 import 'package:fandom_verse/screens/admin/fandom_mng.dart';
 import 'package:fandom_verse/screens/admin/mng_event.dart';
 import 'package:fandom_verse/screens/admin/prd_mnd.dart';
+import 'package:fandom_verse/screens/admin/user_mng.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -479,7 +480,15 @@ class AdminDrawer extends StatelessWidget {
                     context: context,
                     icon: Icons.people_alt_rounded,
                     title: 'Manage Users',
-                    onTap: onUsers,
+                   onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const UserManagementScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

@@ -5230,7 +5230,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         'name': _nameController.text.trim(),
 
         // Product description
-        'desc': _descController.text.trim(),
+        'description': _descController.text.trim(),
 
         // Product price
         'price': price,
