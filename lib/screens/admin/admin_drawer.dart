@@ -1,4 +1,351 @@
+// import 'package:fandom_verse/screens/admin/add_event_screen.dart';
+// import 'package:fandom_verse/screens/admin/addfandom.dart';
+// import 'package:fandom_verse/screens/admin/mng_event.dart';
+// import 'package:fandom_verse/screens/admin/prd_mnd.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:flutter/material.dart';
+
+// class AdminDrawer extends StatelessWidget {
+//   final VoidCallback? onDashboard;
+//   final VoidCallback? onFandoms;
+//   final VoidCallback? onEvents;
+//   final VoidCallback? onProducts;
+//   final VoidCallback? onUsers;
+
+//   const AdminDrawer({
+//     super.key,
+//     this.onDashboard,
+//     this.onFandoms,
+//     this.onEvents,
+//     this.onProducts,
+//     this.onUsers,
+//   });
+
+//   static const Color _backgroundColor = Color(0xFF080A12);
+//   static const Color _panelColor = Color(0xFF111522);
+//   static const Color _primaryColor = Color(0xFF7C5CFC);
+//   static const Color _primaryLightColor = Color(0xFF9D87FF);
+//   static const Color _goldColor = Color(0xFFE0B45A);
+//   static const Color _whiteColor = Color(0xFFF5F5F7);
+//   static const Color _mutedColor = Color(0xFF9CA3B5);
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Drawer(
+//       backgroundColor: _backgroundColor,
+//       width: 290,
+//       child: SafeArea(
+//         child: Column(
+//           children: [
+//             _buildHeader(),
+//             const SizedBox(height: 18),
+//             Expanded(
+//               child: ListView(
+//                 padding: const EdgeInsets.symmetric(horizontal: 12),
+//                 children: [
+//                   _buildSectionTitle('MAIN'),
+//                   _buildDrawerItem(
+//                     context: context,
+//                     icon: Icons.dashboard_rounded,
+//                     title: 'Dashboard',
+//                     onTap: onDashboard,
+//                     isSelected: true,
+//                   ),
+//                   const SizedBox(height: 6),
+//                   _buildSectionTitle('MANAGEMENT'),
+//                   _buildDrawerItem(
+//                     context: context,
+//                     icon: Icons.auto_awesome_rounded,
+//                     title: 'Manage Fandoms',
+//                     onTap: () {
+//                       Navigator.push(
+//                         context,
+//                         MaterialPageRoute(
+//                           builder: (context) => AddFandomScreen(),
+//                         ),
+//                       );
+//                     },
+//                   ),
+//                   _buildDrawerItem(
+//                     context: context,
+//                     icon: Icons.event_rounded,
+//                     title: 'Manage Events',
+//                     onTap: () {
+//                       Navigator.push(
+//                         context,
+//                         MaterialPageRoute(
+//                           builder: (context) => ManageEventsScreen(),
+//                         ),
+//                       );
+//                     },
+//                   ),
+//                   _buildDrawerItem(
+//                     context: context,
+//                     icon: Icons.shopping_bag_rounded,
+//                     title: 'Manage Products',
+//                     onTap: () {
+//                       Navigator.push(
+//                         context,
+//                         MaterialPageRoute(
+//                           builder: (context) => ProductManagementScreen(),
+//                         ),
+//                       );
+//                     },
+//                   ),
+//                   _buildDrawerItem(
+//                     context: context,
+//                     icon: Icons.people_alt_rounded,
+//                     title: 'Manage Users',
+//                     onTap: onUsers,
+//                   ),
+//                 ],
+//               ),
+//             ),
+//             _buildLogoutButton(context),
+//             const SizedBox(height: 16),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildHeader() {
+//     return Container(
+//       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+//       padding: const EdgeInsets.all(18),
+//       decoration: BoxDecoration(
+//         gradient: LinearGradient(
+//           colors: [_panelColor, _primaryColor.withValues(alpha: 0.13)],
+//           begin: Alignment.topLeft,
+//           end: Alignment.bottomRight,
+//         ),
+//         borderRadius: BorderRadius.circular(20),
+//         border: Border.all(color: _primaryColor.withValues(alpha: 0.18)),
+//       ),
+//       child: Row(
+//         children: [
+//           Container(
+//             width: 48,
+//             height: 48,
+//             decoration: BoxDecoration(
+//               gradient: const LinearGradient(
+//                 colors: [_primaryColor, _primaryLightColor],
+//                 begin: Alignment.topLeft,
+//                 end: Alignment.bottomRight,
+//               ),
+//               borderRadius: BorderRadius.circular(14),
+//               boxShadow: [
+//                 BoxShadow(
+//                   color: _primaryColor.withValues(alpha: 0.25),
+//                   blurRadius: 18,
+//                 ),
+//               ],
+//             ),
+//             child: const Icon(
+//               Icons.admin_panel_settings_rounded,
+//               color: Colors.white,
+//               size: 25,
+//             ),
+//           ),
+//           const SizedBox(width: 13),
+//           const Expanded(
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 Text(
+//                   'Fandom Verse',
+//                   style: TextStyle(
+//                     color: _whiteColor,
+//                     fontSize: 17,
+//                     fontWeight: FontWeight.w800,
+//                   ),
+//                 ),
+//                 SizedBox(height: 3),
+//                 Text(
+//                   'Admin Panel',
+//                   style: TextStyle(
+//                     color: _goldColor,
+//                     fontSize: 12,
+//                     fontWeight: FontWeight.w600,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   Widget _buildSectionTitle(String title) {
+//     return Padding(
+//       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+//       child: Text(
+//         title,
+//         style: const TextStyle(
+//           color: _mutedColor,
+//           fontSize: 10,
+//           fontWeight: FontWeight.w800,
+//           letterSpacing: 1.3,
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildDrawerItem({
+//     required BuildContext context,
+//     required IconData icon,
+//     required String title,
+//     VoidCallback? onTap,
+//     bool isSelected = false,
+//   }) {
+//     return Container(
+//       margin: const EdgeInsets.only(bottom: 4),
+//       decoration: BoxDecoration(
+//         gradient: isSelected
+//             ? LinearGradient(
+//                 colors: [
+//                   _primaryColor.withValues(alpha: 0.20),
+//                   _primaryColor.withValues(alpha: 0.08),
+//                 ],
+//               )
+//             : null,
+//         borderRadius: BorderRadius.circular(13),
+//         border: isSelected
+//             ? Border.all(color: _primaryColor.withValues(alpha: 0.20))
+//             : null,
+//       ),
+//       child: ListTile(
+//         dense: true,
+//         contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 2),
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+//         leading: Icon(
+//           icon,
+//           color: isSelected ? _primaryLightColor : _mutedColor,
+//           size: 21,
+//         ),
+//         title: Text(
+//           title,
+//           style: TextStyle(
+//             color: isSelected ? _whiteColor : _mutedColor,
+//             fontSize: 13.5,
+//             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+//           ),
+//         ),
+//         trailing: isSelected
+//             ? Container(
+//                 width: 6,
+//                 height: 6,
+//                 decoration: const BoxDecoration(
+//                   color: _primaryLightColor,
+//                   shape: BoxShape.circle,
+//                 ),
+//               )
+//             : const Icon(
+//                 Icons.chevron_right_rounded,
+//                 color: Color(0xFF5F6678),
+//                 size: 18,
+//               ),
+//         onTap: () {
+//           Navigator.pop(context);
+//           onTap?.call();
+//         },
+//       ),
+//     );
+//   }
+
+//   Widget _buildLogoutButton(BuildContext context) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(horizontal: 12),
+//       child: ListTile(
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+//         tileColor: Colors.redAccent.withValues(alpha: 0.06),
+//         leading: const Icon(
+//           Icons.logout_rounded,
+//           color: Colors.redAccent,
+//           size: 21,
+//         ),
+//         title: const Text(
+//           'Logout',
+//           style: TextStyle(
+//             color: Colors.redAccent,
+//             fontSize: 13.5,
+//             fontWeight: FontWeight.w600,
+//           ),
+//         ),
+//         onTap: () => _handleLogout(context),
+//       ),
+//     );
+//   }
+
+//   Future<void> _handleLogout(BuildContext context) async {
+//     final shouldLogout = await showDialog<bool>(
+//       context: context,
+//       builder: (dialogContext) {
+//         return AlertDialog(
+//           backgroundColor: _panelColor,
+//           title: const Text(
+//             'Logout',
+//             style: TextStyle(color: _whiteColor, fontWeight: FontWeight.w700),
+//           ),
+//           content: const Text(
+//             'Are you sure you want to logout?',
+//             style: TextStyle(color: _mutedColor),
+//           ),
+//           actions: [
+//             TextButton(
+//               onPressed: () {
+//                 Navigator.pop(dialogContext, false);
+//               },
+//               child: const Text('Cancel'),
+//             ),
+//             ElevatedButton(
+//               onPressed: () {
+//                 Navigator.pop(dialogContext, true);
+//               },
+//               style: ElevatedButton.styleFrom(
+//                 backgroundColor: Colors.redAccent,
+//                 foregroundColor: Colors.white,
+//               ),
+//               child: const Text('Logout'),
+//             ),
+//           ],
+//         );
+//       },
+//     );
+
+//     if (shouldLogout != true) {
+//       return;
+//     }
+
+//     try {
+//       await FirebaseAuth.instance.signOut();
+//     } catch (error) {
+//       if (!context.mounted) {
+//         return;
+//       }
+
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text('Logout failed: $error'),
+//           behavior: SnackBarBehavior.floating,
+//         ),
+//       );
+//     }
+//   }
+// }
+
+
+
+
+
+
+
+
+import 'package:fandom_verse/screens/admin/add_event_screen.dart';
 import 'package:fandom_verse/screens/admin/addfandom.dart';
+import 'package:fandom_verse/screens/admin/fandom_mng.dart';
+import 'package:fandom_verse/screens/admin/mng_event.dart';
 import 'package:fandom_verse/screens/admin/prd_mnd.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +366,10 @@ class AdminDrawer extends StatelessWidget {
     this.onUsers,
   });
 
+  // ============================================================
+  // COLORS
+  // ============================================================
+
   static const Color _backgroundColor = Color(0xFF080A12);
   static const Color _panelColor = Color(0xFF111522);
   static const Color _primaryColor = Color(0xFF7C5CFC);
@@ -26,6 +377,10 @@ class AdminDrawer extends StatelessWidget {
   static const Color _goldColor = Color(0xFFE0B45A);
   static const Color _whiteColor = Color(0xFFF5F5F7);
   static const Color _mutedColor = Color(0xFF9CA3B5);
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -36,12 +391,17 @@ class AdminDrawer extends StatelessWidget {
         child: Column(
           children: [
             _buildHeader(),
+
             const SizedBox(height: 18),
+
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                ),
                 children: [
                   _buildSectionTitle('MAIN'),
+
                   _buildDrawerItem(
                     context: context,
                     icon: Icons.dashboard_rounded,
@@ -49,8 +409,15 @@ class AdminDrawer extends StatelessWidget {
                     onTap: onDashboard,
                     isSelected: true,
                   ),
+
                   const SizedBox(height: 6),
+
                   _buildSectionTitle('MANAGEMENT'),
+
+                  // ==================================================
+                  // FANDOMS
+                  // ==================================================
+
                   _buildDrawerItem(
                     context: context,
                     icon: Icons.auto_awesome_rounded,
@@ -59,17 +426,36 @@ class AdminDrawer extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AddFandomScreen(),
+                          builder: (context) =>
+                              const FandomManagementScreen(),
                         ),
                       );
                     },
                   ),
+
+                  // ==================================================
+                  // EVENTS
+                  // ==================================================
+
                   _buildDrawerItem(
                     context: context,
                     icon: Icons.event_rounded,
                     title: 'Manage Events',
-                    onTap: onEvents,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const ManageEventsScreen(),
+                        ),
+                      );
+                    },
                   ),
+
+                  // ==================================================
+                  // PRODUCTS
+                  // ==================================================
+
                   _buildDrawerItem(
                     context: context,
                     icon: Icons.shopping_bag_rounded,
@@ -78,11 +464,17 @@ class AdminDrawer extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ProductManagementScreen(),
+                          builder: (context) =>
+                              const ProductManagementScreen(),
                         ),
                       );
                     },
                   ),
+
+                  // ==================================================
+                  // USERS
+                  // ==================================================
+
                   _buildDrawerItem(
                     context: context,
                     icon: Icons.people_alt_rounded,
@@ -92,7 +484,13 @@ class AdminDrawer extends StatelessWidget {
                 ],
               ),
             ),
+
+            // ======================================================
+            // LOGOUT
+            // ======================================================
+
             _buildLogoutButton(context),
+
             const SizedBox(height: 16),
           ],
         ),
@@ -100,18 +498,36 @@ class AdminDrawer extends StatelessWidget {
     );
   }
 
+  // ============================================================
+  // HEADER
+  // ============================================================
+
   Widget _buildHeader() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      margin: const EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        0,
+      ),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [_panelColor, _primaryColor.withValues(alpha: 0.13)],
+          colors: [
+            _panelColor,
+            _primaryColor.withValues(
+              alpha: 0.13,
+            ),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _primaryColor.withValues(alpha: 0.18)),
+        border: Border.all(
+          color: _primaryColor.withValues(
+            alpha: 0.18,
+          ),
+        ),
       ),
       child: Row(
         children: [
@@ -120,14 +536,20 @@ class AdminDrawer extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [_primaryColor, _primaryLightColor],
+                colors: [
+                  _primaryColor,
+                  _primaryLightColor,
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius:
+                  BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: _primaryColor.withValues(alpha: 0.25),
+                  color: _primaryColor.withValues(
+                    alpha: 0.25,
+                  ),
                   blurRadius: 18,
                 ),
               ],
@@ -138,26 +560,33 @@ class AdminDrawer extends StatelessWidget {
               size: 25,
             ),
           ),
+
           const SizedBox(width: 13),
+
           const Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 Text(
                   'Fandom Verse',
                   style: TextStyle(
                     color: _whiteColor,
                     fontSize: 17,
-                    fontWeight: FontWeight.w800,
+                    fontWeight:
+                        FontWeight.w800,
                   ),
                 ),
+
                 SizedBox(height: 3),
+
                 Text(
                   'Admin Panel',
                   style: TextStyle(
                     color: _goldColor,
                     fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontWeight:
+                        FontWeight.w600,
                   ),
                 ),
               ],
@@ -168,9 +597,18 @@ class AdminDrawer extends StatelessWidget {
     );
   }
 
+  // ============================================================
+  // SECTION TITLE
+  // ============================================================
+
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      padding: const EdgeInsets.fromLTRB(
+        12,
+        8,
+        12,
+        8,
+      ),
       child: Text(
         title,
         style: const TextStyle(
@@ -183,6 +621,10 @@ class AdminDrawer extends StatelessWidget {
     );
   }
 
+  // ============================================================
+  // DRAWER ITEM
+  // ============================================================
+
   Widget _buildDrawerItem({
     required BuildContext context,
     required IconData icon,
@@ -191,44 +633,71 @@ class AdminDrawer extends StatelessWidget {
     bool isSelected = false,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 4),
+      margin: const EdgeInsets.only(
+        bottom: 4,
+      ),
       decoration: BoxDecoration(
         gradient: isSelected
             ? LinearGradient(
                 colors: [
-                  _primaryColor.withValues(alpha: 0.20),
-                  _primaryColor.withValues(alpha: 0.08),
+                  _primaryColor.withValues(
+                    alpha: 0.20,
+                  ),
+                  _primaryColor.withValues(
+                    alpha: 0.08,
+                  ),
                 ],
               )
             : null,
-        borderRadius: BorderRadius.circular(13),
+        borderRadius:
+            BorderRadius.circular(13),
         border: isSelected
-            ? Border.all(color: _primaryColor.withValues(alpha: 0.20))
+            ? Border.all(
+                color: _primaryColor
+                    .withValues(
+                  alpha: 0.20,
+                ),
+              )
             : null,
       ),
       child: ListTile(
         dense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+        contentPadding:
+            const EdgeInsets.symmetric(
+          horizontal: 13,
+          vertical: 2,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.circular(13),
+        ),
         leading: Icon(
           icon,
-          color: isSelected ? _primaryLightColor : _mutedColor,
+          color: isSelected
+              ? _primaryLightColor
+              : _mutedColor,
           size: 21,
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: isSelected ? _whiteColor : _mutedColor,
+            color: isSelected
+                ? _whiteColor
+                : _mutedColor,
             fontSize: 13.5,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            fontWeight: isSelected
+                ? FontWeight.w700
+                : FontWeight.w500,
           ),
         ),
         trailing: isSelected
             ? Container(
                 width: 6,
                 height: 6,
-                decoration: const BoxDecoration(
-                  color: _primaryLightColor,
+                decoration:
+                    const BoxDecoration(
+                  color:
+                      _primaryLightColor,
                   shape: BoxShape.circle,
                 ),
               )
@@ -245,12 +714,26 @@ class AdminDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildLogoutButton(BuildContext context) {
+  // ============================================================
+  // LOGOUT BUTTON
+  // ============================================================
+
+  Widget _buildLogoutButton(
+    BuildContext context,
+  ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+      ),
       child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-        tileColor: Colors.redAccent.withValues(alpha: 0.06),
+        shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.circular(13),
+        ),
+        tileColor:
+            Colors.redAccent.withValues(
+          alpha: 0.06,
+        ),
         leading: const Icon(
           Icons.logout_rounded,
           color: Colors.redAccent,
@@ -264,41 +747,82 @@ class AdminDrawer extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        onTap: () => _handleLogout(context),
+        onTap: () {
+          _handleLogout(context);
+        },
       ),
     );
   }
 
-  Future<void> _handleLogout(BuildContext context) async {
-    final shouldLogout = await showDialog<bool>(
+  // ============================================================
+  // LOGOUT
+  // ============================================================
+
+  Future<void> _handleLogout(
+    BuildContext context,
+  ) async {
+    // ----------------------------------------------------------
+    // Confirmation dialog
+    // ----------------------------------------------------------
+
+    final bool? shouldLogout =
+        await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: _panelColor,
+
+          shape: RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.circular(18),
+          ),
+
           title: const Text(
             'Logout',
-            style: TextStyle(color: _whiteColor, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              color: _whiteColor,
+              fontWeight: FontWeight.w700,
+            ),
           ),
+
           content: const Text(
             'Are you sure you want to logout?',
-            style: TextStyle(color: _mutedColor),
+            style: TextStyle(
+              color: _mutedColor,
+            ),
           ),
+
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(dialogContext, false);
+                Navigator.pop(
+                  dialogContext,
+                  false,
+                );
               },
-              child: const Text('Cancel'),
+              child: const Text(
+                'Cancel',
+              ),
             ),
+
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(dialogContext, true);
+                Navigator.pop(
+                  dialogContext,
+                  true,
+                );
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
+              style:
+                  ElevatedButton.styleFrom(
+                backgroundColor:
+                    Colors.redAccent,
+                foregroundColor:
+                    Colors.white,
               ),
-              child: const Text('Logout'),
+              child: const Text(
+                'Logout',
+              ),
             ),
           ],
         );
@@ -309,19 +833,82 @@ class AdminDrawer extends StatelessWidget {
       return;
     }
 
+    // ----------------------------------------------------------
+    // Show loading dialog while signing out
+    // ----------------------------------------------------------
+
+    if (!context.mounted) {
+      return;
+    }
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return const PopScope(
+          canPop: false,
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      },
+    );
+
     try {
+      // --------------------------------------------------------
+      // Firebase logout
+      // --------------------------------------------------------
+
       await FirebaseAuth.instance.signOut();
-    } catch (error) {
+
       if (!context.mounted) {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Logout failed: $error'),
-          behavior: SnackBarBehavior.floating,
-        ),
+      // --------------------------------------------------------
+      // Close loading dialog
+      // --------------------------------------------------------
+
+      Navigator.of(context).pop();
+
+      // --------------------------------------------------------
+      // IMPORTANT:
+      //
+      // Remove EVERYTHING from navigation stack.
+      //
+      // The user cannot press Back to return to admin pages.
+      // --------------------------------------------------------
+
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        '/login',
+        (route) => false,
       );
+    } catch (error) {
+      // --------------------------------------------------------
+      // Close loading dialog
+      // --------------------------------------------------------
+
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      if (!context.mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              'Logout failed: $error',
+            ),
+            behavior:
+                SnackBarBehavior.floating,
+            backgroundColor:
+                Colors.redAccent,
+          ),
+        );
     }
   }
 }
