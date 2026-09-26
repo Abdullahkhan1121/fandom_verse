@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fandom_verse/screens/home/home_screen.dart';
+// import 'package:fandom_verse/screens/home/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -61,7 +63,7 @@ class AuthGate extends StatelessWidget {
               return const AdminPanelScreen();
             }
 
-            return const FandomHomePage();
+            return const HomePage();
           },
         );
       },
