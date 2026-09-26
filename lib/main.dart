@@ -1,6 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-
+import 'screens/fandoms/discover_screen.dart';
 import 'firebase_options.dart';
 import 'screens/auth/auth_gate.dart';
 import 'screens/profile/profile_screen.dart';
@@ -49,13 +49,15 @@ class _FandomHomePageState extends State<FandomHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _titles[_currentIndex],
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: false,
-      ),
+      appBar: _currentIndex == 1
+          ? null
+          : AppBar(
+              title: Text(
+                _titles[_currentIndex],
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              centerTitle: false,
+            ),
       body: _buildCurrentPage(),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
@@ -100,11 +102,7 @@ class _FandomHomePageState extends State<FandomHomePage> {
       case 0:
         return const HomePage();
       case 1:
-        return const SimplePage(
-          icon: Icons.explore,
-          title: 'Discover Fandoms',
-          description: 'Explore movies, games, anime, books, and more.',
-        );
+        return const DiscoverScreen();
       case 2:
         return const SimplePage(
           icon: Icons.event,
