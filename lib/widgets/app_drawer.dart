@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../screens/about/about_screen.dart';
 import '../screens/bookmarks/bookmarks_screen.dart';
 import '../screens/chatbot/chatbot_screen.dart';
+import '../screens/contact/contact_screen.dart';
 import '../screens/events/events_screen.dart';
 import '../screens/fandoms/discover_screen.dart';
 import '../screens/products/products_screen.dart';
@@ -100,6 +102,17 @@ class AppDrawer extends StatelessWidget {
                     icon: Icons.auto_awesome_rounded,
                     label: 'AI Fan Helper',
                     onTap: () => _open(context, const ChatbotScreen()),
+                  ),
+                  const _SectionLabel('HELP'),
+                  _DrawerItem(
+                    icon: Icons.info_outline_rounded,
+                    label: 'About Us',
+                    onTap: () => _open(context, const AboutScreen()),
+                  ),
+                  _DrawerItem(
+                    icon: Icons.mail_outline_rounded,
+                    label: 'Contact Us',
+                    onTap: () => _open(context, const ContactScreen()),
                   ),
                 ],
               ),

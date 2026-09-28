@@ -2,6 +2,8 @@ import 'package:fandom_verse/screens/admin/fandom_mng.dart';
 import 'package:fandom_verse/screens/admin/mng_event.dart';
 import 'package:fandom_verse/screens/admin/prd_mnd.dart';
 import 'package:fandom_verse/screens/admin/user_mng.dart';
+import 'package:fandom_verse/screens/admin/admin_inquiries_screen.dart';
+import 'package:fandom_verse/services/inquiry_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -121,6 +123,23 @@ class AdminDrawer extends StatelessWidget {
                       );
                     },
                   ),
+
+                  // INQUIRIES
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.mail_outline_rounded,
+                    title: 'Inquiries',
+                    trailing: _buildNewInquiriesBadge(),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const AdminInquiriesScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -231,12 +250,40 @@ class AdminDrawer extends StatelessWidget {
 
   // DRAWER ITEM
 
+  // NEW-INQUIRIES BADGE
+
+  Widget? _buildNewInquiriesBadge() {
+    return StreamBuilder<int>(
+      stream: InquiryService().watchNewCount(),
+      builder: (context, snapshot) {
+        final count = snapshot.data ?? 0;
+        if (count == 0) return const SizedBox.shrink();
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: _goldColor,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            count > 99 ? '99+' : '$count',
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildDrawerItem({
     required BuildContext context,
     required IconData icon,
     required String title,
     VoidCallback? onTap,
     bool isSelected = false,
+    Widget? trailing,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
@@ -279,20 +326,21 @@ class AdminDrawer extends StatelessWidget {
                 isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
-        trailing: isSelected
-            ? Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: _primaryLightColor,
-                  shape: BoxShape.circle,
-                ),
-              )
-            : const Icon(
-                Icons.chevron_right_rounded,
-                color: Color(0xFF5F6678),
-                size: 18,
-              ),
+        trailing: trailing ??
+            (isSelected
+                ? Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: _primaryLightColor,
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                : const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Color(0xFF5F6678),
+                    size: 18,
+                  )),
         onTap: () {
           Navigator.pop(context);
           onTap?.call();

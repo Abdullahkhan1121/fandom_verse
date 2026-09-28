@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../../widgets/user_avatar.dart';
 import '../bookmarks/bookmarks_screen.dart';
 import '../products/wishlist_screen.dart';
+import 'order_history_screen.dart';
 import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -241,6 +242,13 @@ class ProfileScreen extends StatelessWidget {
                       title: 'My Wishlist',
                       subtitle: 'Products you saved for later',
                       onTap: () => _push(context, const WishlistScreen()),
+                    ),
+                    Divider(color: AppColors.border),
+                    _MenuTile(
+                      icon: Icons.receipt_long_rounded,
+                      title: 'Order History',
+                      subtitle: 'Your past simulated checkouts',
+                      onTap: () => _push(context, const OrderHistoryScreen()),
                     ),
                     Divider(color: AppColors.border),
                     _MenuTile(
