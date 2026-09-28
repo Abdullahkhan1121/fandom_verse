@@ -1,5 +1,7 @@
 import 'package:fandom_verse/screens/products/products_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:fandom_verse/screens/fandoms/discover_screen.dart';
+import 'package:fandom_verse/screens/chatbot/chatbot_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -57,10 +59,19 @@ class AppDrawer extends StatelessWidget {
           ),
 
           ListTile(
-            leading: const Icon(Icons.explore),
-            title: const Text('Discover'),
-            onTap: () => Navigator.pop(context),
-          ),
+  leading: const Icon(Icons.explore),
+  title: const Text('Discover'),
+  onTap: () {
+    Navigator.pop(context);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const DiscoverScreen(),
+      ),
+    );
+  },
+),
 
           ListTile(
             leading: const Icon(Icons.event),
@@ -80,6 +91,19 @@ class AppDrawer extends StatelessWidget {
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
             onTap: () => Navigator.pop(context),
+          ),
+
+          
+ListTile(
+            leading: const Icon(Icons.auto_awesome),
+            title: const Text('AI Fan Helper'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChatbotScreen()),
+              );
+            },
           ),
         ],
       ),
