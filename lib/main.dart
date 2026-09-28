@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
 import 'screens/auth/auth_gate.dart';
-
+import 'screens/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,13 +21,8 @@ class FandomVerseApp extends StatelessWidget {
     return MaterialApp(
       title: 'Fandom Verse',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.deepPurple,
-        brightness: Brightness.dark,
-      ),
+      theme: AppTheme.dark,
       home: const AuthGate(),
     );
   }
 }
-

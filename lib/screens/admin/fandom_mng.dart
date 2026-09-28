@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fandom_verse/screens/admin/addfandom.dart';
 import 'package:fandom_verse/screens/admin/admin_drawer.dart';
+import 'package:fandom_verse/services/demo_data_seeder.dart'; // TEMP: demo seeding
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -180,6 +181,161 @@ class _FandomManagementScreenState extends State<FandomManagementScreen> {
   }
 
   // ===========================================================================
+  // HUB CONTENT HELPERS (glossary / deep dive / resources)
+  // ===========================================================================
+
+  static const List<String> _resourceTypes = ['news', 'video', 'podcast'];
+
+  List<String> _splitLines(String text) {
+    return text
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+  }
+
+  /// Firestore list of {term, meaning} -> "Term: meaning" per line.
+  String _glossaryToText(dynamic value) {
+    if (value is! List) return '';
+
+    return value
+        .whereType<Map>()
+        .map((item) {
+          final String term = _stringValue(item['term']).trim();
+          final String meaning = _stringValue(item['meaning']).trim();
+          return term.isEmpty ? '' : '$term: $meaning';
+        })
+        .where((line) => line.isNotEmpty)
+        .join('\n');
+  }
+
+  List<Map<String, String>> _parseGlossary(String text) {
+    final List<Map<String, String>> result = [];
+
+    for (final String line in _splitLines(text)) {
+      final int index = line.indexOf(':');
+      if (index <= 0) continue;
+
+      final String term = line.substring(0, index).trim();
+      final String meaning = line.substring(index + 1).trim();
+
+      if (term.isNotEmpty && meaning.isNotEmpty) {
+        result.add({'term': term, 'meaning': meaning});
+      }
+    }
+
+    return result;
+  }
+
+  String _deepDiveToText(dynamic value) {
+    if (value is! List) return '';
+
+    return value
+        .map((item) => _stringValue(item).trim())
+        .where((line) => line.isNotEmpty)
+        .join('\n');
+  }
+
+  /// Firestore list of {type, title, url} -> "type | title | url" per line.
+  String _resourcesToText(dynamic value) {
+    if (value is! List) return '';
+
+    return value
+        .whereType<Map>()
+        .map((item) {
+          final String type = _stringValue(item['type']).trim();
+          final String title = _stringValue(item['title']).trim();
+          final String url = _stringValue(item['url']).trim();
+          return url.isEmpty ? '' : '$type | $title | $url';
+        })
+        .where((line) => line.isNotEmpty)
+        .join('\n');
+  }
+
+  List<Map<String, String>> _parseResources(String text) {
+    final List<Map<String, String>> result = [];
+
+    for (final String line in _splitLines(text)) {
+      final List<String> parts = line.split('|').map((p) => p.trim()).toList();
+      if (parts.length < 3) continue;
+
+      final String type = parts[0].toLowerCase();
+      final String title = parts[1];
+      final String url = parts.sublist(2).join('|').trim();
+
+      if (_resourceTypes.contains(type) &&
+          title.isNotEmpty &&
+          url.isNotEmpty) {
+        result.add({'type': type, 'title': title, 'url': url});
+      }
+    }
+
+    return result;
+  }
+
+  // ===========================================================================
+  // TEMP: SEED DEMO DATA
+  // Remove this method + the AppBar action + the import once demo data
+  // has been added.
+  // ===========================================================================
+
+  bool _isSeeding = false;
+
+  Future<void> _seedDemoData() async {
+    if (_isSeeding) return;
+
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: _panel,
+        surfaceTintColor: Colors.transparent,
+        title: const Text(
+          'Seed demo data?',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        ),
+        content: const Text(
+          'This adds the demo fandoms and demo events. Anything that already exists is skipped, so it is safe to run twice.',
+          style: TextStyle(color: Color(0xFFB8BDCC), fontSize: 13, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel', style: TextStyle(color: _muted)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _violet,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Seed'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isSeeding = true);
+
+    try {
+      final String message = await DemoDataSeeder().seedAll();
+      _showSnackBar(message);
+    } on FirebaseException catch (e) {
+      _showSnackBar(
+        e.code == 'permission-denied'
+            ? 'Permission denied. Check your Firestore rules.'
+            : 'Seeding failed: ${e.message ?? e.code}',
+        error: true,
+      );
+    } catch (e) {
+      _showSnackBar('Seeding failed: $e', error: true);
+    } finally {
+      if (mounted) setState(() => _isSeeding = false);
+    }
+  }
+
+  // ===========================================================================
   // ADD
   // ===========================================================================
 
@@ -345,6 +501,26 @@ class _FandomManagementScreenState extends State<FandomManagementScreen> {
       text: _stringValue(data['description']),
     );
 
+    final TextEditingController taglineController = TextEditingController(
+      text: _stringValue(data['tagline']),
+    );
+
+    final TextEditingController guideController = TextEditingController(
+      text: _stringValue(data['beginnerGuide']),
+    );
+
+    final TextEditingController glossaryController = TextEditingController(
+      text: _glossaryToText(data['glossary']),
+    );
+
+    final TextEditingController deepDiveController = TextEditingController(
+      text: _deepDiveToText(data['deepDive']),
+    );
+
+    final TextEditingController resourcesController = TextEditingController(
+      text: _resourcesToText(data['resources']),
+    );
+
     String selectedStatus =
         _stringValue(data['status']).trim().isEmpty
             ? 'approved'
@@ -361,6 +537,7 @@ class _FandomManagementScreenState extends State<FandomManagementScreen> {
     }
 
     bool isActive = data['isActive'] == true;
+    bool isTrending = data['isTrending'] == true;
 
     final List<String> images = List<String>.from(
       _getImages(data),
@@ -474,14 +651,6 @@ class _FandomManagementScreenState extends State<FandomManagementScreen> {
                 return;
               }
 
-              if (images.isEmpty) {
-                _showSnackBar(
-                  'Please add at least one fandom image.',
-                  error: true,
-                );
-                return;
-              }
-
               final bool? confirmed = await showDialog<bool>(
                 context: dialogContext,
                 builder: (confirmContext) {
@@ -553,7 +722,13 @@ class _FandomManagementScreenState extends State<FandomManagementScreen> {
                   'description': description,
                   'status': selectedStatus,
                   'isActive': isActive,
-                  'imageUrl': finalImages.first,
+                  'isTrending': isTrending,
+                  'tagline': taglineController.text.trim(),
+                  'beginnerGuide': guideController.text.trim(),
+                  'glossary': _parseGlossary(glossaryController.text),
+                  'deepDive': _splitLines(deepDiveController.text),
+                  'resources': _parseResources(resourcesController.text),
+                  'imageUrl': finalImages.isEmpty ? '' : finalImages.first,
                   'images': finalImages,
                   'updatedAt': FieldValue.serverTimestamp(),
                 });
@@ -715,6 +890,62 @@ class _FandomManagementScreenState extends State<FandomManagementScreen> {
 
                             const SizedBox(height: 16),
 
+                            _editLabel('Tagline'),
+                            const SizedBox(height: 7),
+                            _editTextField(
+                              controller: taglineController,
+                              hintText: 'A short one-line hook',
+                              icon: Icons.short_text_rounded,
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            _editLabel('Beginner Guide'),
+                            const SizedBox(height: 7),
+                            _editTextField(
+                              controller: guideController,
+                              hintText: 'Where should a new fan start?',
+                              icon: Icons.menu_book_rounded,
+                              maxLines: 4,
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            _editLabel('Glossary (one "Term: meaning" per line)'),
+                            const SizedBox(height: 7),
+                            _editTextField(
+                              controller: glossaryController,
+                              hintText: 'Hokage: The leader of a ninja village',
+                              icon: Icons.translate_rounded,
+                              maxLines: 6,
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            _editLabel('Deep Dive (one fact per line)'),
+                            const SizedBox(height: 7),
+                            _editTextField(
+                              controller: deepDiveController,
+                              hintText: 'One interesting fact per line',
+                              icon: Icons.travel_explore_rounded,
+                              maxLines: 5,
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            _editLabel(
+                              'Resources (type | title | url, type = news, video or podcast)',
+                            ),
+                            const SizedBox(height: 7),
+                            _editTextField(
+                              controller: resourcesController,
+                              hintText: 'video | Official trailer | https://...',
+                              icon: Icons.link_rounded,
+                              maxLines: 5,
+                            ),
+
+                            const SizedBox(height: 16),
+
                             _editLabel('Status'),
                             const SizedBox(height: 7),
 
@@ -846,6 +1077,73 @@ class _FandomManagementScreenState extends State<FandomManagementScreen> {
                                         : (value) {
                                             setDialogState(() {
                                               isActive = value;
+                                            });
+                                          },
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 13,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _panel2,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: _border),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 35,
+                                    height: 35,
+                                    decoration: BoxDecoration(
+                                      color: _violet.withOpacity(.10),
+                                      borderRadius: BorderRadius.circular(9),
+                                    ),
+                                    child: const Icon(
+                                      Icons.local_fire_department_rounded,
+                                      color: _violetLight,
+                                      size: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Trending Fandom',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text(
+                                          'Highlight this fandom as trending',
+                                          style: TextStyle(
+                                            color: _muted,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Switch(
+                                    value: isTrending,
+                                    activeColor: _violet,
+                                    onChanged: isSaving
+                                        ? null
+                                        : (value) {
+                                            setDialogState(() {
+                                              isTrending = value;
                                             });
                                           },
                                   ),
@@ -1106,6 +1404,11 @@ class _FandomManagementScreenState extends State<FandomManagementScreen> {
     nameController.dispose();
     categoryController.dispose();
     descriptionController.dispose();
+    taglineController.dispose();
+    guideController.dispose();
+    glossaryController.dispose();
+    deepDiveController.dispose();
+    resourcesController.dispose();
   }
 
   // ===========================================================================
@@ -1334,6 +1637,21 @@ class _FandomManagementScreenState extends State<FandomManagementScreen> {
             fontWeight: FontWeight.w700,
           ),
         ),
+        actions: [
+          // TEMP: seed demo data. Delete this action when finished.
+          IconButton(
+            tooltip: 'Seed demo data',
+            onPressed: _isSeeding ? null : _seedDemoData,
+            icon: _isSeeding
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.cloud_upload_outlined),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: _fandomsCollection

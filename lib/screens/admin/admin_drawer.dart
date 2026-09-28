@@ -1,4 +1,3 @@
-
 import 'package:fandom_verse/screens/admin/fandom_mng.dart';
 import 'package:fandom_verse/screens/admin/mng_event.dart';
 import 'package:fandom_verse/screens/admin/prd_mnd.dart';
@@ -383,11 +382,20 @@ class AdminDrawer extends StatelessWidget {
       return;
     }
 
-    // Loading dialog
+    // Grab these BEFORE signing out. Once Firebase signs out, AuthGate
+    // rebuilds and this drawer's context is disposed, so we must not
+    // rely on `context` afterwards.
+    final NavigatorState navigator = Navigator.of(
+      context,
+      rootNavigator: true,
+    );
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
 
+    // Loading dialog (shown on the root navigator)
     showDialog<void>(
       context: context,
       barrierDismissible: false,
+      useRootNavigator: true,
       builder: (_) {
         return const PopScope(
           canPop: false,
@@ -399,28 +407,17 @@ class AdminDrawer extends StatelessWidget {
     );
 
     try {
-      // Firebase logout
-
       await FirebaseAuth.instance.signOut();
 
-      if (!context.mounted) {
-        return;
-      }
-
-      // Close loading dialog.
-      // AuthGate should redirect after Firebase signs out.
-
-      Navigator.of(context, rootNavigator: true).pop();
+      // Remove the loading dialog AND every screen that was pushed on top
+      // of AuthGate (Fandom Management, Products, Events, ...). What is
+      // left is AuthGate, which now shows the login screen.
+      navigator.popUntil((route) => route.isFirst);
     } catch (error) {
-      if (!context.mounted) {
-        return;
-      }
+      // Close only the loading dialog.
+      navigator.pop();
 
-      // Close loading dialog.
-
-      Navigator.of(context, rootNavigator: true).pop();
-
-      ScaffoldMessenger.of(context)
+      messenger
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(

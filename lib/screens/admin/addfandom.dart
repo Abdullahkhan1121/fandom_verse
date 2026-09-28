@@ -26,6 +26,18 @@ class _AddFandomScreenState extends State<AddFandomScreen> {
 
   bool _isSaving = false;
   bool _isActive = true;
+  bool _isTrending = false;
+
+  // New hub content (all optional)
+  final _taglineController = TextEditingController();
+  final _guideController = TextEditingController();
+  final _glossaryController = TextEditingController();
+  final _deepDiveController = TextEditingController();
+  final _resourcesController = TextEditingController();
+
+  /// Firestore documents are limited to 1 MiB, so keep total image text
+  /// (Base64) safely below that. The main image is stored twice.
+  static const int _maxImageChars = 800000;
   String? _category;
 
   final List<String> _categories = [
@@ -45,6 +57,11 @@ class _AddFandomScreenState extends State<AddFandomScreen> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _taglineController.dispose();
+    _guideController.dispose();
+    _glossaryController.dispose();
+    _deepDiveController.dispose();
+    _resourcesController.dispose();
     super.dispose();
   }
 
@@ -55,7 +72,7 @@ class _AddFandomScreenState extends State<AddFandomScreen> {
   Future<void> _pickImages() async {
     try {
       final pickedImages = await _picker.pickMultiImage(
-        imageQuality: 85,
+        imageQuality: 70,
       );
 
       if (pickedImages.isEmpty) return;
@@ -109,7 +126,7 @@ class _AddFandomScreenState extends State<AddFandomScreen> {
 
       img.Image resizedImage = decodedImage;
 
-      const maxSize = 1200;
+      const maxSize = 800;
 
       if (decodedImage.width > maxSize ||
           decodedImage.height > maxSize) {
@@ -126,7 +143,7 @@ class _AddFandomScreenState extends State<AddFandomScreen> {
 
       final compressedBytes = img.encodeJpg(
         resizedImage,
-        quality: 75,
+        quality: 70,
       );
 
       final base64String = base64Encode(compressedBytes);
@@ -146,6 +163,61 @@ class _AddFandomScreenState extends State<AddFandomScreen> {
     setState(() {
       _images.removeAt(index);
     });
+  }
+
+  // ============================================================
+  // PARSE TEXT BOXES INTO LISTS
+  // Glossary  : one per line ->  Term: meaning
+  // Deep dive : one fact per line
+  // Resources : one per line ->  type | title | url
+  //             (type = news, video or podcast)
+  // Lines that don't match the format are skipped.
+  // ============================================================
+
+  List<String> _lines(String text) {
+    return text
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+  }
+
+  List<Map<String, String>> _parseGlossary(String text) {
+    final result = <Map<String, String>>[];
+
+    for (final line in _lines(text)) {
+      final index = line.indexOf(':');
+      if (index <= 0) continue;
+
+      final term = line.substring(0, index).trim();
+      final meaning = line.substring(index + 1).trim();
+
+      if (term.isNotEmpty && meaning.isNotEmpty) {
+        result.add({'term': term, 'meaning': meaning});
+      }
+    }
+
+    return result;
+  }
+
+  List<Map<String, String>> _parseResources(String text) {
+    const allowedTypes = {'news', 'video', 'podcast'};
+    final result = <Map<String, String>>[];
+
+    for (final line in _lines(text)) {
+      final parts = line.split('|').map((p) => p.trim()).toList();
+      if (parts.length < 3) continue;
+
+      final type = parts[0].toLowerCase();
+      final title = parts[1];
+      final url = parts.sublist(2).join('|').trim();
+
+      if (allowedTypes.contains(type) && title.isNotEmpty && url.isNotEmpty) {
+        result.add({'type': type, 'title': title, 'url': url});
+      }
+    }
+
+    return result;
   }
 
   // ============================================================
@@ -186,6 +258,22 @@ class _AddFandomScreenState extends State<AddFandomScreen> {
       return;
     }
 
+    final int totalImageChars =
+        _images.fold<int>(0, (sum, image) => sum + image.length) +
+            _images.first.length;
+
+    if (totalImageChars > _maxImageChars) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Images are too large to save. Remove one or use fewer images.',
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isSaving = true;
     });
@@ -213,6 +301,14 @@ class _AddFandomScreenState extends State<AddFandomScreen> {
         'images': _images,
 
         'category': _category,
+
+        // Hub content
+        'tagline': _taglineController.text.trim(),
+        'beginnerGuide': _guideController.text.trim(),
+        'glossary': _parseGlossary(_glossaryController.text),
+        'deepDive': _lines(_deepDiveController.text),
+        'resources': _parseResources(_resourcesController.text),
+        'isTrending': _isTrending,
 
         // Automatically generated
         'fandomId': fandomId,
@@ -608,6 +704,72 @@ class _AddFandomScreenState extends State<AddFandomScreen> {
           const SizedBox(height: 18),
 
           _buildCategoryDropdown(),
+
+          const SizedBox(height: 18),
+
+          _buildTextField(
+            controller: _taglineController,
+            label: 'Tagline',
+            hint: 'One short line, e.g. Your friendly neighborhood hero',
+            icon: Icons.short_text,
+          ),
+
+          const SizedBox(height: 18),
+
+          _buildTextField(
+            controller: _guideController,
+            label: 'Beginner Guide',
+            hint: 'Where should a new fan start? Which show/game/book first?',
+            icon: Icons.school_outlined,
+            maxLines: 4,
+          ),
+
+          const SizedBox(height: 18),
+
+          _buildTextField(
+            controller: _glossaryController,
+            label: 'Glossary (one per line)',
+            hint: 'Term: meaning\nCanon: the official story',
+            icon: Icons.menu_book_outlined,
+            maxLines: 5,
+          ),
+
+          const SizedBox(height: 18),
+
+          _buildTextField(
+            controller: _deepDiveController,
+            label: 'Deep Dive facts (one per line)',
+            hint: 'Hidden trivia, advanced lore, behind-the-scenes facts',
+            icon: Icons.lightbulb_outline,
+            maxLines: 5,
+          ),
+
+          const SizedBox(height: 18),
+
+          _buildTextField(
+            controller: _resourcesController,
+            label: 'Resources (one per line)',
+            hint: 'type | title | url\nvideo | Official trailer | https://...',
+            icon: Icons.link,
+            maxLines: 5,
+          ),
+
+          const SizedBox(height: 8),
+
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            activeThumbColor: const Color(0xFF7C5CFC),
+            title: const Text(
+              'Show in Trending carousel',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: const Text(
+              'Featured at the top of the Discover screen.',
+              style: TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+            value: _isTrending,
+            onChanged: (value) => setState(() => _isTrending = value),
+          ),
         ],
       ),
     );

@@ -25,6 +25,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
       TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _ticketLinkController = TextEditingController();
 
   List<Map<String, dynamic>> _fandoms = [];
 
@@ -36,6 +38,11 @@ class _AddEventScreenState extends State<AddEventScreen> {
   bool _isPublished = true;
   bool _isLoadingFandoms = true;
   bool _isSaving = false;
+
+  /// Firestore documents are limited to 1 MiB. Images are stored as Base64
+  /// (and the first image is stored twice: in `imageUrls` and `imageUrl`),
+  /// so we keep the total text size safely below that limit.
+  static const int _maxImageChars = 800000;
 
   /// Every image is stored as a Base64 string.
   ///
@@ -58,6 +65,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
     _descriptionController.dispose();
     _categoryController.dispose();
     _locationController.dispose();
+    _cityController.dispose();
+    _ticketLinkController.dispose();
     super.dispose();
   }
 
@@ -103,13 +112,16 @@ class _AddEventScreenState extends State<AddEventScreen> {
 
   // ============================================================
   // PICK MULTIPLE IMAGES
+  // Images are resized/compressed so they fit in a Firestore document.
   // ============================================================
 
   Future<void> _pickImages() async {
     try {
       final List<XFile> pickedImages =
           await _imagePicker.pickMultiImage(
-        imageQuality: 80,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 70,
       );
 
       if (pickedImages.isEmpty) return;
@@ -306,6 +318,21 @@ class _AddEventScreenState extends State<AddEventScreen> {
       return false;
     }
 
+    // The first image is saved twice (imageUrls + imageUrl).
+    final int totalChars = _imageUrls.fold<int>(
+          0,
+          (sum, image) => sum + image.length,
+        ) +
+        _imageUrls.first.length;
+
+    if (totalChars > _maxImageChars) {
+      _showMessage(
+        'Images are too large to save. Remove one or use fewer/smaller images.',
+        isError: true,
+      );
+      return false;
+    }
+
     return true;
   }
 
@@ -373,6 +400,12 @@ class _AddEventScreenState extends State<AddEventScreen> {
         'location':
             _locationController.text.trim(),
 
+        /// City is used by the user-side city filter.
+        'city': _cityController.text.trim(),
+
+        /// Optional link to buy tickets.
+        'ticketLink': _ticketLinkController.text.trim(),
+
         'startAt': startTimestamp,
 
         'endAt': endTimestamp,
@@ -404,11 +437,11 @@ class _AddEventScreenState extends State<AddEventScreen> {
         isError: true,
       );
     } finally {
-      if (!mounted) return;
-
-      setState(() {
-        _isSaving = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
     }
   }
 
@@ -421,6 +454,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
     _descriptionController.clear();
     _categoryController.clear();
     _locationController.clear();
+    _cityController.clear();
+    _ticketLinkController.clear();
 
     setState(() {
       _selectedFandomId = null;
@@ -584,7 +619,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
               TextFormField(
                 controller: _locationController,
                 decoration: const InputDecoration(
-                  labelText: 'Location',
+                  labelText: 'Location (venue and address)',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
@@ -594,6 +629,35 @@ class _AddEventScreenState extends State<AddEventScreen> {
                   }
                   return null;
                 },
+              ),
+
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _cityController,
+                decoration: const InputDecoration(
+                  labelText: 'City',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null ||
+                      value.trim().isEmpty) {
+                    return 'City is required';
+                  }
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _ticketLinkController,
+                keyboardType: TextInputType.url,
+                decoration: const InputDecoration(
+                  labelText: 'Ticket Link (optional)',
+                  hintText: 'https://...',
+                  border: OutlineInputBorder(),
+                ),
               ),
 
               const SizedBox(height: 20),

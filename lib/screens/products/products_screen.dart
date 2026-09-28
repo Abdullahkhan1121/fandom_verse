@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../models/product_model.dart';
 import '../../services/product_service.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/app_drawer.dart';
+import '../../services/wishlist_service.dart';
 import '../cart/cart_and_checkout.dart';
+import 'product_detail_screen.dart';
+import 'wishlist_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
@@ -15,6 +20,9 @@ class ProductsScreen extends StatefulWidget {
 class _ProductsScreenState extends State<ProductsScreen> {
   final _productService = ProductService();
   final _cartService = CartService();
+  final _wishlist = WishlistService();
+  StreamSubscription<Set<String>>? _wishlistSub;
+  Set<String> _wishlistIds = {};
   final _searchController = TextEditingController();
   String _selectedCategory = 'All';
   String _searchQuery = '';
@@ -23,10 +31,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
   void initState() {
     super.initState();
     ProductCache.instance.start();
+    _wishlistSub = _wishlist.watchIds().listen((ids) {
+      if (mounted) setState(() => _wishlistIds = ids);
+    });
   }
 
   @override
   void dispose() {
+    _wishlistSub?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -144,13 +156,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           final product = filtered[index];
                           return ProductCard(
                             product: product,
-                            isWishlisted: false, // wired up in the Wishlist step
-                            onTap: () {
-                              // TODO: navigate to ProductDetailScreen (next step)
-                            },
-                            onWishlistToggle: () {
-                              // TODO: wire to WishlistService
-                            },
+                            isWishlisted: _wishlistIds.contains(product.id),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    ProductDetailScreen(product: product),
+                              ),
+                            ),
+                            onWishlistToggle: () => _wishlist.setWishlisted(
+                              product.id,
+                              add: !_wishlistIds.contains(product.id),
+                            ),
                             onAddToCart: () async {
                               try {
                                 await _cartService.addToCart(product);
@@ -216,9 +233,10 @@ class _Header extends StatelessWidget {
             ),
           ),
           IconButton(
-            onPressed: () {
-              // TODO: navigate to WishlistScreen
-            },
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const WishlistScreen()),
+            ),
             icon: const Icon(Icons.favorite_border, color: Colors.white),
           ),
           StreamBuilder<List<CartItemModel>>(
