@@ -179,28 +179,19 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
   // EDIT EVENT
   // ============================================================
 
-  void _editEvent(
+  Future<void> _editEvent(
     QueryDocumentSnapshot<Map<String, dynamic>> document,
-  ) {
-    /*
-     * Replace this navigation with your EditEventScreen
-     * when you create it.
-     *
-     * Example:
-     *
-     * Navigator.push(
-     *   context,
-     *   MaterialPageRoute(
-     *     builder: (_) => EditEventScreen(
-     *       eventId: document.id,
-     *     ),
-     *   ),
-     * );
-     */
-
-    _showMessage(
-      'Edit screen can be connected here.',
+  ) async {
+    final bool? saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddEventScreen(existingEvent: document),
+      ),
     );
+
+    if (saved == true) {
+      _showMessage('Event updated successfully.');
+    }
   }
 
   // ============================================================

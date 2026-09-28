@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/app_info.dart';
-import '../../widgets/office_map.dart';
 import '../../services/inquiry_service.dart';
 import '../theme/app_theme.dart';
 
@@ -367,8 +366,6 @@ class _OfficeCard extends StatelessWidget {
           _line(Icons.place_outlined, office.address),
           _line(Icons.phone_outlined, office.phone),
           _line(Icons.schedule_rounded, office.hours),
-          const SizedBox(height: 12),
-          OfficeMapCard(office: office),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,

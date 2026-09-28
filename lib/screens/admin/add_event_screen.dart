@@ -7,7 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AddEventScreen extends StatefulWidget {
-  const AddEventScreen({super.key});
+  /// When [existingEvent] is provided the screen works in EDIT mode:
+  /// the form is pre-filled and saving updates that document instead of
+  /// creating a new one.
+  const AddEventScreen({super.key, this.existingEvent});
+
+  final DocumentSnapshot<Map<String, dynamic>>? existingEvent;
 
   @override
   State<AddEventScreen> createState() => _AddEventScreenState();
@@ -53,10 +58,54 @@ class _AddEventScreenState extends State<AddEventScreen> {
   /// ]
   final List<String> _imageUrls = [];
 
+  bool get _isEditing => widget.existingEvent != null;
+
   @override
   void initState() {
     super.initState();
+    _prefillFromExistingEvent();
     _loadFandoms();
+  }
+
+  // ============================================================
+  // PREFILL (EDIT MODE)
+  // ============================================================
+
+  void _prefillFromExistingEvent() {
+    final doc = widget.existingEvent;
+    if (doc == null) return;
+
+    final data = doc.data() ?? {};
+
+    _titleController.text = (data['title'] ?? '').toString();
+    _descriptionController.text = (data['description'] ?? '').toString();
+    _categoryController.text = (data['category'] ?? '').toString();
+    _locationController.text = (data['location'] ?? '').toString();
+    _cityController.text = (data['city'] ?? '').toString();
+    _ticketLinkController.text = (data['ticketLink'] ?? '').toString();
+
+    final String fandomId = (data['fandomId'] ?? '').toString();
+    _selectedFandomId = fandomId.isEmpty ? null : fandomId;
+
+    final dynamic start = data['startAt'];
+    final dynamic end = data['endAt'];
+    if (start is Timestamp) _startAt = start.toDate();
+    if (end is Timestamp) _endAt = end.toDate();
+
+    _isPublished = data['isPublished'] == true;
+
+    final dynamic images = data['imageUrls'];
+    if (images is List && images.isNotEmpty) {
+      for (final image in images) {
+        final String value = image.toString();
+        if (value.isNotEmpty && !_imageUrls.contains(value)) {
+          _imageUrls.add(value);
+        }
+      }
+    } else {
+      final String single = (data['imageUrl'] ?? '').toString();
+      if (single.isNotEmpty) _imageUrls.add(single);
+    }
   }
 
   @override
@@ -95,6 +144,13 @@ class _AddEventScreenState extends State<AddEventScreen> {
       setState(() {
         _fandoms = fandoms;
         _isLoadingFandoms = false;
+
+        // In edit mode, the saved fandom may have been deleted since.
+        // A dropdown value that is not in its items list would crash.
+        if (_selectedFandomId != null &&
+            !fandoms.any((f) => f['id'] == _selectedFandomId)) {
+          _selectedFandomId = null;
+        }
       });
     } catch (e) {
       if (!mounted) return;
@@ -180,10 +236,15 @@ class _AddEventScreenState extends State<AddEventScreen> {
   Future<void> _pickStartDateTime() async {
     final DateTime now = DateTime.now();
 
+    // When editing an event that already started, its date is in the past.
+    // firstDate must not be after initialDate or the picker asserts.
+    final DateTime firstDate =
+        (_startAt != null && _startAt!.isBefore(now)) ? _startAt! : now;
+
     final DateTime? date = await showDatePicker(
       context: context,
       initialDate: _startAt ?? now,
-      firstDate: now,
+      firstDate: firstDate,
       lastDate: DateTime(2100),
     );
 
@@ -334,6 +395,68 @@ class _AddEventScreenState extends State<AddEventScreen> {
     }
 
     return true;
+  }
+
+  // ============================================================
+  // CREATE EVENT
+  // ============================================================
+
+  Future<void> _saveEvent() async {
+    if (_isEditing) {
+      await _updateEvent();
+    } else {
+      await _createEvent();
+    }
+  }
+
+  // ============================================================
+  // UPDATE EVENT (EDIT MODE)
+  // createdAt, createdBy and eventId are left untouched.
+  // ============================================================
+
+  Future<void> _updateEvent() async {
+    if (_isSaving) return;
+
+    if (!_validateEvent()) return;
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      await widget.existingEvent!.reference.update({
+        'title': _titleController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'imageUrls': List<String>.from(_imageUrls),
+        'imageUrl': _imageUrls.isNotEmpty ? _imageUrls.first : '',
+        'fandomId': _selectedFandomId,
+        'category': _categoryController.text.trim(),
+        'location': _locationController.text.trim(),
+        'city': _cityController.text.trim(),
+        'ticketLink': _ticketLinkController.text.trim(),
+        'startAt': Timestamp.fromDate(_startAt!),
+        'endAt': Timestamp.fromDate(_endAt!),
+        'isPublished': _isPublished,
+        'updatedAt': Timestamp.now(),
+      });
+
+      if (!mounted) return;
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Failed to update event: $e',
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
   }
 
   // ============================================================
@@ -518,7 +641,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Event'),
+        title: Text(_isEditing ? 'Edit Event' : 'Add Event'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -754,11 +877,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
                         ClipRRect(
                           borderRadius:
                               BorderRadius.circular(10),
-                          child: Image.memory(
-                            _decodeBase64Image(
-                              _imageUrls[index],
-                            ),
-                            fit: BoxFit.cover,
+                          child: _buildPreviewImage(
+                            _imageUrls[index],
                           ),
                         ),
 
@@ -816,7 +936,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
                 height: 52,
                 child: ElevatedButton(
                   onPressed:
-                      _isSaving ? null : _createEvent,
+                      _isSaving ? null : _saveEvent,
                   child: _isSaving
                       ? const SizedBox(
                           width: 24,
@@ -827,8 +947,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text(
-                          'Create Event',
+                      : Text(
+                          _isEditing ? 'Save Changes' : 'Create Event',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -841,6 +961,35 @@ class _AddEventScreenState extends State<AddEventScreen> {
         ),
       ),
     );
+  }
+
+  // ============================================================
+  // IMAGE PREVIEW (base64 or normal http image link)
+  // ============================================================
+
+  Widget _buildPreviewImage(String value) {
+    const Widget broken = ColoredBox(
+      color: Colors.black12,
+      child: Icon(Icons.broken_image_outlined),
+    );
+
+    if (value.startsWith('http')) {
+      return Image.network(
+        value,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => broken,
+      );
+    }
+
+    try {
+      return Image.memory(
+        _decodeBase64Image(value),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => broken,
+      );
+    } catch (_) {
+      return broken;
+    }
   }
 
   // ============================================================
